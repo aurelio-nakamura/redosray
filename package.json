@@ -1,9 +1,17 @@
 {
   "name": "redosray",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
   "description": "Find ReDoS-vulnerable regexes in your code and prove them — offline. Shows the exact input that hangs each pattern.",
   "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aurelio-nakamura/redosray.git"
+  },
+  "homepage": "https://aurelio-nakamura.github.io/redosray/",
+  "bugs": {
+    "url": "https://github.com/aurelio-nakamura/redosray/issues"
+  },
+  "author": "Aurelio Nakamura",
   "bin": {
     "redosray": "bin/redosray.js"
   },
