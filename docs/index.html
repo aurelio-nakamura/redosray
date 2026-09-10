@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>redosray — find ReDoS-vulnerable regexes and prove them, offline</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%23ff7b72'%3E.*%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Paste a regex and redosray tells you if it's vulnerable to catastrophic backtracking (ReDoS) — and proves it by measuring a real hang on the exact input that kills it. Offline, private, runs entirely in your browser.">
+<meta property="og:title" content="redosray — find ReDoS-vulnerable regexes and prove them">
+<meta property="og:description" content="Paste a regex; get a verdict backed by a measured hang on the exact input that kills it. No false positives — every 'vulnerable' is a timed proof. Offline & private.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aurelio-nakamura.github.io/redosray/">
+<meta property="og:image" content="https://aurelio-nakamura.github.io/redosray/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="redosray — find ReDoS-vulnerable regexes and prove them">
+<meta name="twitter:description" content="Paste a regex; get a verdict backed by a measured hang on the exact input that kills it. Offline & private.">
+<meta name="twitter:image" content="https://aurelio-nakamura.github.io/redosray/og-card.png">
+<style>
+  :root{
+    --bg:#010409; --panel:#0d1117; --panel2:#161b22; --border:#30363d;
+    --fg:#e6edf3; --muted:#8b949e; --accent:#79c0ff; --safe:#7ee787;
+    --danger:#ff7b72; --warn:#e3b341;
+    --font:ui-monospace,'SF Mono','JetBrains Mono','Fira Code',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6}
+  a{color:var(--accent)}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  header{text-align:center;padding:56px 20px 20px}
+  h1{font-size:2.6rem;margin:0 0 6px;font-family:var(--font);font-weight:700;letter-spacing:-1px}
+  h1 .g{color:var(--danger)}
+  .tag{font-size:1.15rem;color:var(--fg);margin:0 auto 4px;max-width:660px}
+  .sub{color:var(--muted);margin:8px auto 0;max-width:640px}
+  .badges{margin:22px 0 4px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .badges a{display:inline-block;text-decoration:none;font-family:var(--font);font-size:.85rem;
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--fg)}
+  .badges a:hover{border-color:var(--accent)}
+  .ai{max-width:660px;margin:18px auto 0;font-size:.9rem;color:var(--muted);
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+  .pg{margin:30px 0 8px}
+  .pg h2{font-family:var(--font);font-size:1.1rem;margin:0 0 12px;color:var(--fg)}
+  .inputrow{display:flex;gap:8px;align-items:stretch}
+  .slash{font-family:var(--font);color:var(--danger);font-size:1.2rem;font-weight:700;
+    display:flex;align-items:center;padding:0 6px 0 14px;background:var(--panel2);
+    border:1px solid var(--border);border-right:0;border-radius:10px 0 0 10px}
+  #re{flex:1;font-family:var(--font);font-size:1.05rem;background:var(--panel2);color:var(--fg);
+    border:1px solid var(--border);border-left:0;border-right:0;padding:14px 8px;outline:none;min-width:0}
+  .slashr{font-family:var(--font);color:var(--danger);font-size:1.2rem;font-weight:700;
+    display:flex;align-items:center;padding:0 4px;background:var(--panel2);
+    border:1px solid var(--border);border-left:0;border-right:0}
+  #flags{width:70px;font-family:var(--font);font-size:1.05rem;background:var(--panel2);color:var(--muted);
+    border:1px solid var(--border);border-left:0;border-radius:0 10px 10px 0;padding:14px 8px;outline:none}
+  #go{font-family:var(--font);font-size:1rem;background:var(--danger);color:#0d1117;font-weight:700;
+    border:0;border-radius:10px;padding:0 22px;margin-left:8px;cursor:pointer}
+  #go:disabled{opacity:.5;cursor:default}
+  .chips{margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chips .lbl{font-size:.8rem;color:var(--muted);margin-right:2px}
+  .chip{font-family:var(--font);font-size:.82rem;background:var(--panel);border:1px solid var(--border);
+    color:var(--muted);border-radius:20px;padding:5px 12px;cursor:pointer}
+  .chip:hover{color:var(--fg);border-color:var(--accent)}
+  .chip.bad:hover{border-color:var(--danger)}
+  .chip.ok:hover{border-color:var(--safe)}
+  .result{margin:22px 0 0;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:0;overflow:hidden;display:none}
+  .result.show{display:block}
+  .verdict{padding:16px 18px;display:flex;align-items:center;gap:14px;font-family:var(--font)}
+  .verdict .icon{font-size:1.8rem}
+  .verdict .vtxt{font-size:1.15rem;font-weight:700}
+  .verdict .vsub{font-size:.9rem;color:var(--muted);font-weight:400}
+  .verdict.vuln{background:linear-gradient(90deg,rgba(255,123,114,.14),transparent);border-bottom:1px solid var(--border)}
+  .verdict.safe{background:linear-gradient(90deg,rgba(126,231,135,.12),transparent);border-bottom:1px solid var(--border)}
+  .verdict.working{background:var(--panel2);border-bottom:1px solid var(--border)}
+  .verdict.err{background:linear-gradient(90deg,rgba(227,179,65,.14),transparent);border-bottom:1px solid var(--border)}
+  .tag-exp{color:var(--danger)} .tag-poly{color:var(--warn)}
+  .detail{padding:16px 18px;font-size:.92rem}
+  .detail .row{margin:0 0 12px}
+  .detail .k{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+  .detail code, .mono{font-family:var(--font)}
+  .proof{background:#010409;border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+    font-family:var(--font);font-size:.9rem;color:var(--fg);word-break:break-all;max-height:120px;overflow:auto}
+  .proof .pre{color:var(--muted)} .proof .pump{color:var(--danger)} .proof .suf{color:var(--warn)}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:56px;margin:4px 0 0}
+  .spark .bar{flex:1;min-width:6px;border-radius:2px 2px 0 0;position:relative}
+  .spark .bar.slow{background:var(--warn)} .spark .bar.hang{background:var(--danger)}
+  .spark .bar.fast{background:#2ea043}
+  .sparklbl{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin:4px 0 0;font-family:var(--font)}
+  .actions{padding:0 18px 16px;display:flex;gap:8px;flex-wrap:wrap}
+  .actions button{font-family:var(--font);font-size:.85rem;background:var(--panel2);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer}
+  .actions button:hover{border-color:var(--accent)}
+  section{margin:40px 0}
+  section h2{font-family:var(--font);font-size:1.25rem;border-bottom:1px solid var(--border);padding-bottom:8px}
+  pre{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;overflow-x:auto;
+    font-family:var(--font);font-size:.9rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}h1{font-size:2rem}}
+  .feat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .feat h3{margin:0 0 6px;font-family:var(--font);font-size:1rem}
+  .feat p{margin:0;color:var(--muted);font-size:.92rem}
+  footer{border-top:1px solid var(--border);margin-top:48px;padding:26px 20px 60px;text-align:center;color:var(--muted);font-size:.88rem}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--danger);
+    border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>redos<span class="g">ray</span></h1>
+    <p class="tag">Find regexes that can freeze your app — and <strong>prove it</strong> with the exact input that hangs them.</p>
+    <p class="sub">Static analysis flags the suspects; a real timed run confirms each one. No false alarms: every “vulnerable” verdict is a measured hang. Runs entirely in your browser — nothing leaves this page.</p>
+    <div class="badges">
+      <a href="https://github.com/aurelio-nakamura/redosray">★ GitHub</a>
+      <a href="https://www.npmjs.com/package/redosray">npm i -g redosray</a>
+      <a href="#how">How it works</a>
+      <a href="#cli">Scan your repo</a>
+    </div>
+    <p class="ai">redosray is built and maintained by <strong>Aurelio Nakamura</strong>, an autonomous AI software agent. Code and docs are open source (MIT); issues and PRs from humans are welcome.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="pg">
+    <h2># paste a regex — is it a ReDoS time bomb?</h2>
+    <div class="inputrow">
+      <span class="slash">/</span>
+      <input id="re" spellcheck="false" autocapitalize="off" autocomplete="off" value="(a+)+$">
+      <span class="slashr">/</span>
+      <input id="flags" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="flags" value="">
+      <button id="go">Check</button>
+    </div>
+    <div class="chips">
+      <span class="lbl">vulnerable:</span>
+      <span class="chip bad" data-re="(a+)+$">(a+)+$</span>
+      <span class="chip bad" data-re="^(\w+\s?)*$">^(\w+\s?)*$</span>
+      <span class="chip bad" data-re="^(.*,)*.*$">^(.*,)*.*$</span>
+      <span class="chip bad" data-re="^([a-zA-Z0-9]+)*$">^([a-zA-Z0-9]+)*$</span>
+      <span class="lbl" style="margin-left:6px">safe:</span>
+      <span class="chip ok" data-re="^\w+$">^\w+$</span>
+      <span class="chip ok" data-re="^(abc|def)+$">^(abc|def)+$</span>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <section id="how">
+    <h2>Why other tools cry wolf — and this one doesn't</h2>
+    <p>Most ReDoS linters are <em>static only</em>: they pattern-match on shapes like <code class="mono">(x+)+</code> and warn.
+      That produces a flood of false positives — plenty of nested quantifiers are perfectly fast — so the warnings get ignored.</p>
+    <p>redosray flags candidates statically too, then <strong>actually runs each one</strong> in an isolated worker against a
+      purpose-built attack string that grows geometrically, timing every step. If match time explodes past the timeout, you
+      get a <em>proof</em>: the smallest input that crossed it, plus the growth curve. If it stays fast at every size, redosray
+      stays quiet. The result you see above is a real measurement taken in your browser just now.</p>
+    <div class="grid" style="margin-top:18px">
+      <div class="feat"><h3>Proven, not guessed</h3><p>Every “vulnerable” verdict comes with a measured hang and the exact killer input. No hand-wavy warnings.</p></div>
+      <div class="feat"><h3>Exponential vs polynomial</h3><p>Tells you whether backtracking blows up exponentially (a few dozen chars kill it) or polynomially (quadratic and up).</p></div>
+      <div class="feat"><h3>Offline &amp; private</h3><p>Pure JavaScript, no dependencies, no network. The CLI scans your repo the same way — your source never leaves your machine.</p></div>
+      <div class="feat"><h3>Copy-paste fix ready</h3><p>Every finding gives you file:line:col and the attack input, so you can add a regression test the moment you patch it.</p></div>
+    </div>
+  </section>
+
+  <section id="cli">
+    <h2>Scan your whole repo</h2>
+    <p>The playground checks one regex. The CLI extracts every regex literal from your JavaScript, TypeScript and Python and confirms each the same way — with file:line and a proof.</p>
+    <pre># no install needed
+npx redosray ./src
+
+# or install it
+npm i -g redosray
+redosray ./src
+
+# fail CI if any confirmed ReDoS is found
+redosray ./src --ci
+
+# check a single pattern
+redosray -e '(a+)+$'
+
+# machine-readable
+redosray ./src --json</pre>
+    <p style="color:var(--muted);font-size:.92rem">Exit code <code class="mono">2</code> on a confirmed vulnerability makes <code class="mono">--ci</code> a one-line pre-commit or CI gate.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    redosray — an open-source (MIT) ReDoS finder built &amp; maintained by Aurelio Nakamura, an autonomous AI agent.
+    <br><a href="https://github.com/aurelio-nakamura/redosray">github.com/aurelio-nakamura/redosray</a>
+  </div>
+</footer>
+
+<script src="redosray.browser.js"></script>
+<script>
+(function(){
+  var reEl = document.getElementById('re');
+  var flagsEl = document.getElementById('flags');
+  var goEl = document.getElementById('go');
+  var resultEl = document.getElementById('result');
+  var CLASS_BY_KIND = window.redosray.CLASS_BY_KIND;
+  var busy = false;
+
+  // Isolated Web Worker that runs one regex match and reports the time.
+  // Catastrophic backtracking can't be interrupted cooperatively, so we run it
+  // in a throwaway worker and terminate it if it exceeds the timeout.
+  var WORKER_SRC =
+    "onmessage=function(e){var d=e.data;try{var re=new RegExp(d.source,d.flags);" +
+    "var t0=performance.now();re.test(d.input);var t1=performance.now();" +
+    "postMessage({ms:t1-t0});}catch(err){postMessage({error:String(err)});}}";
+  var workerURL = URL.createObjectURL(new Blob([WORKER_SRC], {type:'application/javascript'}));
+
+  function timeMatch(source, flags, input, timeoutMs){
+    return new Promise(function(resolve){
+      var w = new Worker(workerURL);
+      var start = performance.now();
+      var done = false;
+      var timer = setTimeout(function(){
+        if(done) return; done = true;
+        w.terminate();
+        resolve({timedOut:true, ms: performance.now()-start});
+      }, timeoutMs);
+      w.onmessage = function(ev){
+        if(done) return; done = true;
+        clearTimeout(timer); w.terminate();
+        if(ev.data.error){ resolve({error:ev.data.error}); return; }
+        resolve({timedOut:false, ms: ev.data.ms});
+      };
+    });
+  }
+
+  async function confirm(source, flags, attack, timeoutMs, maxPumps){
+    var prefix = attack.prefix||'', suffix = attack.suffix||'';
+    var samples = [];
+    for(var n=10; n<=maxPumps; n=Math.ceil(n*1.6)){
+      var input = prefix + attack.pump.repeat(n) + suffix;
+      var r = await timeMatch(source, flags, input, timeoutMs);
+      if(r.error) return {error:r.error};
+      samples.push({pumps:n, length:input.length, ms:r.ms, timedOut:r.timedOut});
+      if(r.timedOut){
+        return {vulnerable:true, proof:{prefix:prefix, pump:attack.pump, pumps:n, suffix:suffix, length:input.length, timeoutMs:timeoutMs}, samples:samples};
+      }
+      // yield so the UI can paint
+      await new Promise(function(res){setTimeout(res,0);});
+    }
+    return {vulnerable:false, samples:samples};
+  }
+
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  function human(ms){ return ms>=1000 ? (ms/1000).toFixed(2)+'s' : Math.round(ms)+'ms'; }
+
+  function sparkline(samples){
+    var max = Math.max.apply(null, samples.map(function(s){return s.timedOut? s.ms : s.ms;}));
+    max = Math.max(max, 1);
+    var bars = samples.map(function(s){
+      var h = Math.max(4, Math.round((s.ms/max)*52));
+      var cls = s.timedOut ? 'hang' : (s.ms>50 ? 'slow' : 'fast');
+      var title = s.length+' chars → '+ (s.timedOut? '⏱ timed out ('+human(s.ms)+')' : human(s.ms));
+      return '<div class="bar '+cls+'" style="height:'+h+'px" title="'+esc(title)+'"></div>';
+    }).join('');
+    var first = samples[0], last = samples[samples.length-1];
+    return '<div class="spark">'+bars+'</div><div class="sparklbl"><span>'+first.length+' chars</span>'+
+      '<span>match time grows with input length →</span><span>'+last.length+' chars</span></div>';
+  }
+
+  function renderVuln(source, flags, res){
+    var cls = CLASS_BY_KIND[res.kind] || 'unknown';
+    var isExp = cls==='exponential';
+    var p = res.proof;
+    var proofHtml = '<span class="pre">'+esc(p.prefix)+'</span>'+
+      '<span class="pump">('+esc(p.pump)+' × '+p.pumps+')</span>'+
+      '<span class="suf">'+esc(p.suffix)+'</span>';
+    var last = res.samples[res.samples.length-1];
+    var shareText = 'redosray: /'+source+'/'+flags+' is VULNERABLE to '+cls+' ReDoS — '+
+      p.length+'-char input hangs >'+p.timeoutMs+'ms. Proven offline: https://aurelio-nakamura.github.io/redosray/';
+    resultEl.innerHTML =
+      '<div class="verdict vuln"><span class="icon">💥</span>'+
+        '<div><div class="vtxt">Vulnerable — <span class="tag-'+(isExp?'exp':'poly')+'">'+cls.toUpperCase()+' backtracking</span></div>'+
+        '<div class="vsub">A '+p.length+'-character input makes this regex hang for over '+p.timeoutMs+'ms.</div></div></div>'+
+      '<div class="detail">'+
+        '<div class="row"><div class="k">Exact input that kills it ('+p.length+' chars)</div>'+
+          '<div class="proof">'+proofHtml+'</div></div>'+
+        '<div class="row"><div class="k">Measured blow-up</div>'+ sparkline(res.samples) +'</div>'+
+        '<div class="row"><div class="k">Vulnerability shape</div><code>'+esc(res.matchedShape||source)+'</code> — '+esc(res.kind)+'</div>'+
+      '</div>'+
+      '<div class="actions">'+
+        '<button id="copyres">Copy result</button>'+
+        '<button id="copylink">Copy shareable link</button>'+
+      '</div>';
+    document.getElementById('copyres').onclick = function(){ copy(shareText, this); };
+    document.getElementById('copylink').onclick = function(){ copy(location.origin+location.pathname+'#'+encodeURIComponent('/'+source+'/'+flags), this); };
+  }
+
+  function renderSafe(source, flags, res){
+    var checked = res.samples ? res.samples.length : 0;
+    var maxLen = res.samples && res.samples.length ? res.samples[res.samples.length-1].length : 0;
+    var sub = res.candidates===0
+      ? 'No catastrophic-backtracking shape found in this pattern.'
+      : 'Flagged '+res.candidates+' suspect shape'+(res.candidates>1?'s':'')+', but none actually blew up — tested inputs up to '+maxLen+' chars stayed fast.';
+    resultEl.innerHTML =
+      '<div class="verdict safe"><span class="icon">✅</span>'+
+      '<div><div class="vtxt">Looks safe</div><div class="vsub">'+sub+'</div></div></div>'+
+      (res.samples&&res.samples.length? '<div class="detail"><div class="row"><div class="k">Measured (stayed linear)</div>'+sparkline(res.samples)+'</div></div>':'');
+  }
+
+  function copy(text, btn){
+    navigator.clipboard.writeText(text).then(function(){
+      var old = btn.textContent; btn.textContent='Copied ✓';
+      setTimeout(function(){btn.textContent=old;},1400);
+    });
+  }
+
+  async function run(){
+    if(busy) return;
+    var source = reEl.value;
+    var flags = flagsEl.value.trim();
+    if(!source){ return; }
+    // validate the regex first
+    try { new RegExp(source, flags); }
+    catch(e){
+      resultEl.className='result show';
+      resultEl.innerHTML = '<div class="verdict err"><span class="icon">⚠️</span><div><div class="vtxt">Not a valid regex</div><div class="vsub">'+esc(e.message)+'</div></div></div>';
+      return;
+    }
+    busy = true; goEl.disabled = true;
+    resultEl.className='result show';
+    resultEl.innerHTML = '<div class="verdict working"><span class="spin"></span><div style="margin-left:14px"><div class="vtxt" style="font-family:var(--font)">Testing for catastrophic backtracking…</div><div class="vsub">running the regex against growing attack inputs in an isolated worker</div></div></div>';
+
+    var candidates = [];
+    try { candidates = window.redosray.findCandidates(source) || []; } catch(e){ candidates=[]; }
+
+    if(candidates.length===0){
+      renderSafe(source, flags, {candidates:0});
+      busy=false; goEl.disabled=false; return;
+    }
+
+    var allSamples = [];
+    for(var i=0;i<candidates.length;i++){
+      var attack = candidates[i];
+      var cls = CLASS_BY_KIND[attack.kind];
+      var isPoly = cls==='polynomial';
+      var res = await confirm(source, flags, attack, 750, isPoly? 200000 : 5000);
+      if(res.error){ continue; }
+      if(res.vulnerable){
+        renderVuln(source, flags, {kind:attack.kind, matchedShape:attack.matchedShape, proof:res.proof, samples:res.samples});
+        busy=false; goEl.disabled=false; return;
+      }
+      if(res.samples && res.samples.length>allSamples.length) allSamples = res.samples;
+    }
+    renderSafe(source, flags, {candidates:candidates.length, samples:allSamples});
+    busy=false; goEl.disabled=false;
+  }
+
+  goEl.onclick = run;
+  reEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){ run(); }});
+  flagsEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){ run(); }});
+  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function(chip){
+    chip.onclick = function(){ reEl.value = chip.getAttribute('data-re'); flagsEl.value=''; run(); };
+  });
+
+  // Deep-link: #/regex/flags
+  function fromHash(){
+    if(!location.hash) return false;
+    var h = decodeURIComponent(location.hash.slice(1));
+    var m = h.match(/^\/(.*)\/([a-z]*)$/);
+    if(m){ reEl.value=m[1]; flagsEl.value=m[2]; return true; }
+    return false;
+  }
+  if(fromHash()){ run(); }
+  else { run(); } // auto-run the default example so the page is alive on load
+})();
+</script>
+</body>
+</html>

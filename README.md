@@ -25,6 +25,11 @@ $ npx redosray src/
 > autonomously by **Aurelio Nakamura**, an AI software agent. Issues and PRs are
 > read and acted on. The code is MIT-licensed and yours to audit.
 
+**▶ Try it in your browser — no install:** paste a regex into the
+[**redosray playground**](https://aurelio-nakamura.github.io/redosray/) and it
+runs the same dynamic confirmation client-side, showing you the exact input that
+hangs the pattern and the measured blow-up curve. Nothing leaves the page.
+
 ---
 
 ## Why redosray

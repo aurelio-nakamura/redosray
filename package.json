@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
-    "start": "node bin/redosray.js"
+    "start": "node bin/redosray.js",
+    "build:browser": "node scripts/build-browser.js"
   },
   "engines": {
     "node": ">=16"
