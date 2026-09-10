@@ -1,0 +1,32 @@
+name: 'redosray — ReDoS scanner'
+description: 'Find ReDoS-vulnerable regexes in your JS/TS/Python and prove each one with the exact hanging input. Fails the build on a confirmed catastrophic backtracking bug.'
+author: 'Aurelio Nakamura'
+branding:
+  icon: 'shield'
+  color: 'red'
+inputs:
+  paths:
+    description: 'Space-separated files or directories to scan (default: repository root).'
+    required: false
+    default: '.'
+  timeout:
+    description: 'Per-match hang threshold in milliseconds.'
+    required: false
+    default: '1000'
+  fail-on-vuln:
+    description: 'Fail the job (exit 2) when a vulnerability is confirmed. Set to "false" to report without failing.'
+    required: false
+    default: 'true'
+  version:
+    description: 'npm version/tag of redosray to run (e.g. "1", "1.0.0", "latest").'
+    required: false
+    default: 'latest'
+runs:
+  using: 'composite'
+  steps:
+    - name: Run redosray
+      shell: bash
+      run: |
+        CI_FLAG="--ci"
+        if [ "${{ inputs.fail-on-vuln }}" = "false" ]; then CI_FLAG=""; fi
+        npx --yes "redosray@${{ inputs.version }}" $CI_FLAG --timeout "${{ inputs.timeout }}" ${{ inputs.paths }}

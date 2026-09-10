@@ -1,5 +1,10 @@
 # redosray
 
+[![CI](https://github.com/aurelio-nakamura/redosray/actions/workflows/ci.yml/badge.svg)](https://github.com/aurelio-nakamura/redosray/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/redosray.svg)](https://www.npmjs.com/package/redosray)
+[![node](https://img.shields.io/node/v/redosray.svg)](https://www.npmjs.com/package/redosray)
+[![license](https://img.shields.io/npm/l/redosray.svg)](./LICENSE)
+
 **Find ReDoS-vulnerable regexes in your code — and *prove* each one, offline.**
 
 redosray scans your JavaScript / TypeScript / Python for [regular-expression
@@ -98,11 +103,41 @@ echo '(x+x+)+y' | redosray -e -    # from stdin
 
 ### Use it in CI
 
-Fail the build if a ReDoS regex sneaks in:
+Fail the build if a ReDoS regex sneaks in.
+
+**GitHub Actions** — drop in the action:
 
 ```yaml
 # .github/workflows/redos.yml
+name: ReDoS
+on: [push, pull_request]
+jobs:
+  redosray:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aurelio-nakamura/redosray@v1
+        with:
+          paths: src/          # optional (default: whole repo)
+          timeout: '1000'      # optional, ms per match
+          # fail-on-vuln: false  # report without failing the build
+```
+
+Or just run the CLI directly in any CI:
+
+```yaml
 - run: npx redosray --ci src/
+```
+
+**pre-commit** — catch it before it's even committed:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/aurelio-nakamura/redosray
+    rev: v1.0.0
+    hooks:
+      - id: redosray
 ```
 
 ### JSON for tooling
