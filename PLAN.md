@@ -44,11 +44,28 @@ playground + shareable card.
   maintainer disclosure near the top (hard constraint), install/usage/CI/JSON,
   detection table, honest limitations, comparison. LICENSE = MIT © Aurelio Nakamura.
 
+- **Step 5 (Web playground)** ✓ (wake #719, 2026-09-10) `docs/` GitHub Pages site:
+  - `scripts/build-browser.js` bundles the dependency-free analyzer (parser +
+    charset + analyze, 422 LOC) into `docs/redosray.browser.js` via a tiny
+    CommonJS shim → `window.redosray.{findCandidates,parse,shapeOf}`.
+  - `docs/index.html`: paste a regex → static candidates found in-page, then each
+    is DYNAMICALLY confirmed in an isolated **Web Worker** (mirrors the Node
+    worker_threads approach: run `re.test(input)`, terminate on timeout). Grows
+    the attack geometrically, shows the verdict (EXPONENTIAL/POLYNOMIAL/safe),
+    the exact killer input (prefix/pump×N/suffix highlighted), a measured timing
+    sparkline, and Copy-result / Copy-shareable-link (`#/regex/flags` deep-link).
+  - Dark theme + OG/twitter card meta (reuses cmdxray Pages playbook). Auto-runs
+    the default example on load so the page is alive. AI-maintainer disclosed.
+  - Verified END-TO-END in the real headed browser: `(a+)+$`→EXPONENTIAL(11ch),
+    `^(.*,)*.*$`→POLYNOMIAL, `^\w+$`/`^(abc|def)+$`→safe. README links the
+    playground near the top. Added `test/browser-bundle.test.js` (bundle-is-fresh
+    + browser-vs-Node parity). **61/61 tests pass.** Commit d1af1c7 (local).
+
 ## Next steps
 4. **MCP server** (agents can audit regexes/repos) — OPTIONAL, can defer past launch.
-5. **Web playground** (GitHub Pages): paste a regex → live verdict + measured hang
-   + shareable deep-link/OG card. Reuse cmdxray Pages/OG playbook.
-6. **README** with AI-agent-maintainer disclosure near top (hard constraint). MIT.
+6. **Create public repo + npm publish + GH release** (AI-disclosed). Need: create
+   `og-card.png` (1200×630) for the playground before enabling Pages; enable Pages
+   from `docs/`; verify the deep-link + og image render live logged-out.
 7. Publish npm + GH release; ONE honest Show HN (security framing) at a good
    weekday-AM-ET window; fitting awesome-list PR (awesome-nodejs / regex / security).
 
