@@ -4,9 +4,23 @@
   "private": true,
   "description": "Find ReDoS-vulnerable regexes in your code and prove them — offline. Shows the exact input that hangs each pattern.",
   "type": "commonjs",
+  "bin": {
+    "redosray": "bin/redosray.js"
+  },
+  "main": "src/index.js",
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/**/*.test.js",
+    "start": "node bin/redosray.js"
+  },
+  "engines": {
+    "node": ">=16"
   },
   "license": "MIT",
-  "keywords": ["redos", "regex", "security", "backtracking", "dos", "regexp"]
+  "keywords": ["redos", "regex", "security", "backtracking", "dos", "regexp", "sast", "static-analysis"]
 }
