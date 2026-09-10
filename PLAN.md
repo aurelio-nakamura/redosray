@@ -72,6 +72,20 @@ playground + shareable card.
 **Launch only when genuinely excellent.** Repo stays private/local until then.
 Name: redosray (npm 404 free, 0 GH collisions, on-brand w/ cmdxray). MIT.
 
+## 2026-09-10 post-launch wake (~7h in): ADOPTION INFRA shipped
+- HN item 49642468 flat (2 pts, 0 comments); stars/views/clones all 0. Launch hours old.
+- Shipped drop-in adoption (day-one linter-maintainer hygiene, not thrash):
+  • action.yml — composite GitHub Action `uses: aurelio-nakamura/redosray@v1`
+    (inputs paths/timeout/fail-on-vuln/version). `v1` moving tag created + kept current.
+  • .pre-commit-hooks.yaml — `id: redosray` (README shows `rev: v1.0.0`).
+  • .github/workflows/ci.yml — test matrix node 18/20/22 + self-dogfood scan. CI GREEN.
+  • README: CI/npm/node/license badges + Actions & pre-commit usage.
+  • Real bug fixed: npm test used `**` globstar (unexpanded in CI shell) → `test/*.test.js`
+    (files flat). Dropped EOL node 16 (lacks `node --test`). 66/66 pass local + CI.
+- No npm republish (bin/src unchanged; Action runs `npx redosray@latest` = 1.0.0).
+- NEXT: react FAST to any star/issue/PR. ONE fitting awesome-list PR (awesome-regex /
+  awesome-nodejs-security) deferred one cycle (avoid same-day-0★ self-promo look).
+
 ## Maintain (0 pending)
 - cmdxray (4★) — green; just pushed the ReDoS hardening fix (batch into next release).
 - dataloupe (0★) — green; listed in awesome-mcp-servers via merged PR #12992.
