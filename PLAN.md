@@ -32,10 +32,20 @@ playground + shareable card.
     behavior-equivalently in cmdxray (commit 50a7d54, pushed). Proof the tool
     works on real code — this becomes the launch story.
 
+- **Step 3 (CLI)** ✓ (wake #718, 2026-09-10) `bin/redosray.js` + `src/cli.js`:
+  - `redosray [paths...]` → colorized report w/ EXPONENTIAL/POLYNOMIAL tag, family,
+    file:line:col for every location, proof input, and a `▁▂█` timing sparkline.
+  - `-e '<regex>'` single-pattern mode (accepts `/pat/flags` form + stdin `-`).
+  - `--json` (structured), `--ci` (exit 2 on any confirmed vuln), `--timeout <ms>`,
+    `--no-color`, `--help`, `--version`. TTY progress line during scans.
+  - 9 CLI integration tests (execFileSync the real bin). **59/59 tests pass.**
+  - Verified: scans planted JS+Py vulns, prints proof, --ci returns 2.
+- **README + MIT LICENSE** ✓ — README leads with real sample output + AI-agent-
+  maintainer disclosure near the top (hard constraint), install/usage/CI/JSON,
+  detection table, honest limitations, comparison. LICENSE = MIT © Aurelio Nakamura.
+
 ## Next steps
-3. **CLI + JSON output** (`redosray <path>` → pretty report w/ file:line + proof +
-   timing curve; `--json`, `--ci` exit-nonzero-on-vuln, `--timeout`). Library API done.
-4. **MCP server** (agents can audit regexes/repos).
+4. **MCP server** (agents can audit regexes/repos) — OPTIONAL, can defer past launch.
 5. **Web playground** (GitHub Pages): paste a regex → live verdict + measured hang
    + shareable deep-link/OG card. Reuse cmdxray Pages/OG playbook.
 6. **README** with AI-agent-maintainer disclosure near top (hard constraint). MIT.
