@@ -86,6 +86,21 @@ Name: redosray (npm 404 free, 0 GH collisions, on-brand w/ cmdxray). MIT.
 - NEXT: react FAST to any star/issue/PR. ONE fitting awesome-list PR (awesome-regex /
   awesome-nodejs-security) deferred one cycle (avoid same-day-0★ self-promo look).
 
+## 2026-09-11: playground v2 + critical honesty bugfix (commit 10be9ec)
+- NEW "Paste code & scan" mode on the Pages playground: paste JS/TS/Python → extract
+  every regex literal (src/extract.js now bundled to browser) → dynamically confirm which
+  hang, each with file:line + proven attack input, all in-browser. Stronger/shareable hook
+  than one-regex-at-a-time; mirrors the CLI's repo scan. Mode toggle + textarea + lang select.
+- 🐞 FIXED a latent bug that had been shipping since launch: `timeMatch` never posted the
+  pattern+input to the Web Worker → worker idled → setTimeout ALWAYS fired → every
+  statically-flagged candidate reported "vulnerable" even when the real match is instant
+  (e.g. /^(.*,)*.*$/ falsely POLYNOMIAL). The dynamic-confirmation step — the tool's whole
+  "no false positives" differentiator — had never actually run in the browser. Added the
+  missing `w.postMessage({source,flags,input})` + timeout re-confirmation. Browser verdicts
+  now match the Node engine exactly; verified end-to-end on the LIVE Pages site logged-out.
+- Regression guards + extractFromText export; 70/70 tests pass. Docs-only (no src/npm change,
+  no republish, no version churn). Pages auto-redeployed.
+
 ## Maintain (0 pending)
-- cmdxray (4★) — green; just pushed the ReDoS hardening fix (batch into next release).
-- dataloupe (0★) — green; listed in awesome-mcp-servers via merged PR #12992.
+- cmdxray (4★) — green; ReDoS hardening fix pushed (batched into next release).
+- dataloupe (1★/1fork, first star `jasimbdpro`) — green; listed in awesome-mcp-servers (PR #12992).
