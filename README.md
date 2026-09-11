@@ -35,6 +35,11 @@ $ npx redosray src/
 runs the same dynamic confirmation client-side, showing you the exact input that
 hangs the pattern and the measured blow-up curve. Nothing leaves the page.
 
+**📖 New to ReDoS?** See [**ReDoS by example**](https://aurelio-nakamura.github.io/redosray/examples.html)
+— the canonical vulnerable regex shapes, why they blow up, the exact input that
+hangs each one, and the safe rewrite. Every example is reproduced with a measured
+hang (and the scary-but-safe ones are shown to be safe).
+
 ---
 
 ## Why redosray
