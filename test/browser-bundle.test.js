@@ -56,3 +56,23 @@ test('playground worker is actually fed input (no idle-timeout false positives)'
     'docs/index.html timeMatch must call w.postMessage({source,flags,input})'
   );
 });
+
+test('every "vulnerable:" demo chip is actually confirmed vulnerable (no mislabels)', async () => {
+  // Regression guard: a chip in the vulnerable row that the engine reports SAFE
+  // (or vice-versa) shows a self-contradicting verdict and destroys demo credibility.
+  const { scanRegex } = require('../src/index');
+  const html = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
+  const chipRe = /<span class="chip (bad|ok)"[^>]*data-re="([^"]*)"/g;
+  let m;
+  const chips = [];
+  while ((m = chipRe.exec(html)) !== null) chips.push({ label: m[1], re: m[2].replace(/&amp;/g, '&') });
+  assert.ok(chips.length >= 4, 'expected demo chips to be present');
+  for (const { label, re } of chips) {
+    const r = await scanRegex(re, '', { timeoutMs: 1000 });
+    if (label === 'bad') {
+      assert.ok(r.vulnerable, `chip "${re}" is labeled vulnerable but engine reports SAFE`);
+    } else {
+      assert.ok(!r.vulnerable, `chip "${re}" is labeled safe but engine reports VULNERABLE`);
+    }
+  }
+});
