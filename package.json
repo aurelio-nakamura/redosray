@@ -1,6 +1,6 @@
 {
   "name": "redosray",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Find ReDoS-vulnerable regexes in your code and prove them — offline. Shows the exact input that hangs each pattern.",
   "type": "commonjs",
   "repository": {
@@ -23,7 +23,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
     "start": "node bin/redosray.js",
     "build:browser": "node scripts/build-browser.js"
   },
