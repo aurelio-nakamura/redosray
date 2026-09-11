@@ -57,6 +57,37 @@
   #go{font-family:var(--font);font-size:1rem;background:var(--danger);color:#0d1117;font-weight:700;
     border:0;border-radius:10px;padding:0 22px;margin-left:8px;cursor:pointer}
   #go:disabled{opacity:.5;cursor:default}
+  .modes{display:flex;gap:6px;margin:0 0 14px}
+  .mode{font-family:var(--font);font-size:.85rem;background:var(--panel);color:var(--muted);
+    border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer}
+  .mode:hover{color:var(--fg)}
+  .mode.active{background:var(--panel2);color:var(--fg);border-color:var(--accent)}
+  .codehint{font-size:.9rem;color:var(--muted);margin:0 0 10px;line-height:1.5}
+  #code{width:100%;box-sizing:border-box;font-family:var(--font);font-size:.9rem;line-height:1.5;
+    background:var(--panel2);color:var(--fg);border:1px solid var(--border);border-radius:10px;
+    padding:14px;outline:none;resize:vertical;min-height:180px}
+  #code:focus{border-color:var(--accent)}
+  .coderow{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .langsel{font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .langsel select{font-family:var(--font);font-size:.85rem;background:var(--panel2);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:6px 8px;outline:none}
+  #goCode{font-family:var(--font);font-size:1rem;background:var(--danger);color:#0d1117;font-weight:700;
+    border:0;border-radius:10px;padding:10px 22px;cursor:pointer;margin-left:auto}
+  #goCode:disabled{opacity:.5;cursor:default}
+  .scanhdr{padding:16px 18px;border-bottom:1px solid var(--border);font-family:var(--font)}
+  .scanhdr .big{font-size:1.05rem;font-weight:700}
+  .scanhdr .sub{font-size:.85rem;color:var(--muted);margin-top:3px}
+  .finding{padding:14px 18px;border-bottom:1px solid var(--border)}
+  .finding:last-child{border-bottom:0}
+  .finding .fhd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .finding code.pat{font-family:var(--font);font-size:.9rem;color:var(--fg);word-break:break-all}
+  .finding .loc{font-size:.78rem;color:var(--muted)}
+  .badge{font-family:var(--font);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:6px}
+  .badge.exp{background:rgba(248,81,73,.15);color:var(--danger)}
+  .badge.poly{background:rgba(219,171,49,.15);color:var(--warn,#dbab31)}
+  .badge.safe{background:rgba(63,185,80,.13);color:var(--safe)}
+  .finding .fproof{margin-top:8px;font-family:var(--font);font-size:.82rem;color:var(--muted)}
+  .fproof .pre{color:var(--muted)} .fproof .pump{color:var(--danger)} .fproof .suf{color:var(--warn)}
   .chips{margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .chips .lbl{font-size:.8rem;color:var(--muted);margin-right:2px}
   .chip{font-family:var(--font);font-size:.82rem;background:var(--panel);border:1px solid var(--border);
@@ -125,23 +156,50 @@
 
 <main class="wrap">
   <div class="pg">
-    <h2># paste a regex — is it a ReDoS time bomb?</h2>
-    <div class="inputrow">
-      <span class="slash">/</span>
-      <input id="re" spellcheck="false" autocapitalize="off" autocomplete="off" value="(a+)+$">
-      <span class="slashr">/</span>
-      <input id="flags" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="flags" value="">
-      <button id="go">Check</button>
+    <h2># is your regex a ReDoS time bomb?</h2>
+    <div class="modes">
+      <button class="mode active" id="modeRegex">Single regex</button>
+      <button class="mode" id="modeCode">Paste code &amp; scan</button>
     </div>
-    <div class="chips">
-      <span class="lbl">vulnerable:</span>
-      <span class="chip bad" data-re="(a+)+$">(a+)+$</span>
-      <span class="chip bad" data-re="^(\w+\s?)*$">^(\w+\s?)*$</span>
-      <span class="chip bad" data-re="^(.*,)*.*$">^(.*,)*.*$</span>
-      <span class="chip bad" data-re="^([a-zA-Z0-9]+)*$">^([a-zA-Z0-9]+)*$</span>
-      <span class="lbl" style="margin-left:6px">safe:</span>
-      <span class="chip ok" data-re="^\w+$">^\w+$</span>
-      <span class="chip ok" data-re="^(abc|def)+$">^(abc|def)+$</span>
+
+    <div id="panelRegex">
+      <div class="inputrow">
+        <span class="slash">/</span>
+        <input id="re" spellcheck="false" autocapitalize="off" autocomplete="off" value="(a+)+$">
+        <span class="slashr">/</span>
+        <input id="flags" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="flags" value="">
+        <button id="go">Check</button>
+      </div>
+      <div class="chips">
+        <span class="lbl">vulnerable:</span>
+        <span class="chip bad" data-re="(a+)+$">(a+)+$</span>
+        <span class="chip bad" data-re="^(\w+\s?)*$">^(\w+\s?)*$</span>
+        <span class="chip bad" data-re="^(.*,)*.*$">^(.*,)*.*$</span>
+        <span class="chip bad" data-re="^([a-zA-Z0-9]+)*$">^([a-zA-Z0-9]+)*$</span>
+        <span class="lbl" style="margin-left:6px">safe:</span>
+        <span class="chip ok" data-re="^\w+$">^\w+$</span>
+        <span class="chip ok" data-re="^(abc|def)+$">^(abc|def)+$</span>
+      </div>
+    </div>
+
+    <div id="panelCode" style="display:none">
+      <p class="codehint">Paste JavaScript, TypeScript or Python. redosray extracts every regex literal, then <strong>proves</strong> which ones can hang — right here in your browser. Nothing is uploaded.</p>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" rows="10">// paste your own code, or scan this sample:
+const EMAIL   = /^([a-zA-Z0-9_.+-]+)+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+const SLUG    = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;         // safe
+const TRIM    = /^\s+|\s+$/g;                          // safe
+const CSV_ROW = /^(.*,)*.*$/;
+const TAG     = new RegExp("<([a-z]+)([^>]*)*>", "i");
+</textarea>
+      <div class="coderow">
+        <label class="langsel">Language
+          <select id="lang">
+            <option value="js">JavaScript / TypeScript</option>
+            <option value="py">Python</option>
+          </select>
+        </label>
+        <button id="goCode">Scan for ReDoS</button>
+      </div>
     </div>
 
     <div class="result" id="result"></div>
@@ -227,6 +285,9 @@ redosray ./src --json</pre>
         if(ev.data.error){ resolve({error:ev.data.error}); return; }
         resolve({timedOut:false, ms: ev.data.ms});
       };
+      // Feed the worker the pattern + attack input so it actually runs the match.
+      // (Without this the worker idles and every check spuriously "times out".)
+      w.postMessage({source:source, flags:flags, input:input});
     });
   }
 
@@ -237,10 +298,20 @@ redosray ./src --json</pre>
       var input = prefix + attack.pump.repeat(n) + suffix;
       var r = await timeMatch(source, flags, input, timeoutMs);
       if(r.error) return {error:r.error};
-      samples.push({pumps:n, length:input.length, ms:r.ms, timedOut:r.timedOut});
       if(r.timedOut){
-        return {vulnerable:true, proof:{prefix:prefix, pump:attack.pump, pumps:n, suffix:suffix, length:input.length, timeoutMs:timeoutMs}, samples:samples};
+        // A genuine catastrophic hang is deterministic: re-run the SAME input to
+        // rule out a spurious timeout from main-thread contention / worker cold-start.
+        // Only two consecutive timeouts on the identical input count as vulnerable.
+        var r2 = await timeMatch(source, flags, input, timeoutMs);
+        if(r2.error) return {error:r2.error};
+        if(r2.timedOut){
+          samples.push({pumps:n, length:input.length, ms:r.ms, timedOut:true});
+          return {vulnerable:true, proof:{prefix:prefix, pump:attack.pump, pumps:n, suffix:suffix, length:input.length, timeoutMs:timeoutMs}, samples:samples};
+        }
+        // false alarm — record the reproduced (fast) measurement and keep going
+        r = r2;
       }
+      samples.push({pumps:n, length:input.length, ms:r.ms, timedOut:false});
       // yield so the UI can paint
       await new Promise(function(res){setTimeout(res,0);});
     }
@@ -311,6 +382,25 @@ redosray ./src --json</pre>
     });
   }
 
+  // Core check for one pattern: returns {status:'vuln'|'safe', ...}.
+  async function checkOne(source, flags){
+    var candidates = [];
+    try { candidates = window.redosray.findCandidates(source) || []; } catch(e){ candidates=[]; }
+    if(candidates.length===0){ return {status:'safe', candidates:0}; }
+    var allSamples = [];
+    for(var i=0;i<candidates.length;i++){
+      var attack = candidates[i];
+      var isPoly = CLASS_BY_KIND[attack.kind]==='polynomial';
+      var res = await confirm(source, flags, attack, 750, isPoly? 200000 : 5000);
+      if(res.error){ continue; }
+      if(res.vulnerable){
+        return {status:'vuln', kind:attack.kind, matchedShape:attack.matchedShape, proof:res.proof, samples:res.samples};
+      }
+      if(res.samples && res.samples.length>allSamples.length) allSamples = res.samples;
+    }
+    return {status:'safe', candidates:candidates.length, samples:allSamples};
+  }
+
   async function run(){
     if(busy) return;
     var source = reEl.value;
@@ -327,30 +417,106 @@ redosray ./src --json</pre>
     resultEl.className='result show';
     resultEl.innerHTML = '<div class="verdict working"><span class="spin"></span><div style="margin-left:14px"><div class="vtxt" style="font-family:var(--font)">Testing for catastrophic backtracking…</div><div class="vsub">running the regex against growing attack inputs in an isolated worker</div></div></div>';
 
-    var candidates = [];
-    try { candidates = window.redosray.findCandidates(source) || []; } catch(e){ candidates=[]; }
-
-    if(candidates.length===0){
-      renderSafe(source, flags, {candidates:0});
-      busy=false; goEl.disabled=false; return;
-    }
-
-    var allSamples = [];
-    for(var i=0;i<candidates.length;i++){
-      var attack = candidates[i];
-      var cls = CLASS_BY_KIND[attack.kind];
-      var isPoly = cls==='polynomial';
-      var res = await confirm(source, flags, attack, 750, isPoly? 200000 : 5000);
-      if(res.error){ continue; }
-      if(res.vulnerable){
-        renderVuln(source, flags, {kind:attack.kind, matchedShape:attack.matchedShape, proof:res.proof, samples:res.samples});
-        busy=false; goEl.disabled=false; return;
-      }
-      if(res.samples && res.samples.length>allSamples.length) allSamples = res.samples;
-    }
-    renderSafe(source, flags, {candidates:candidates.length, samples:allSamples});
+    var res = await checkOne(source, flags);
+    if(res.status==='vuln'){ renderVuln(source, flags, res); }
+    else { renderSafe(source, flags, res); }
     busy=false; goEl.disabled=false;
   }
+
+  // ---- Paste-code scan mode ----
+  var codeEl = document.getElementById('code');
+  var langEl = document.getElementById('lang');
+  var goCodeEl = document.getElementById('goCode');
+
+  function keyFor(f){ return f.source + '\u0000' + (f.flags||''); }
+
+  async function runCode(){
+    if(busy) return;
+    var text = codeEl.value;
+    if(!text.trim()) return;
+    var lang = langEl.value;
+    var found;
+    try { found = window.redosray.extractFromText(text, lang==='py'?'snippet.py':'snippet.ts') || []; }
+    catch(e){ found = []; }
+
+    // dedupe distinct (source+flags), keeping all locations
+    var map = {};
+    found.forEach(function(f){
+      var k = keyFor(f);
+      if(!map[k]) map[k] = {source:f.source, flags:f.flags||'', locs:[]};
+      map[k].locs.push(f.line+':'+f.column);
+    });
+    var patterns = Object.keys(map).map(function(k){ return map[k]; });
+
+    busy = true; goCodeEl.disabled = true;
+    resultEl.className='result show';
+    if(patterns.length===0){
+      resultEl.innerHTML = '<div class="verdict safe"><span class="icon">✅</span><div><div class="vtxt">No regexes found</div><div class="vsub">Couldn\u2019t find any regex literals in that '+(lang==='py'?'Python':'JavaScript/TypeScript')+' snippet.</div></div></div>';
+      busy=false; goCodeEl.disabled=false; return;
+    }
+    resultEl.innerHTML = '<div class="verdict working"><span class="spin"></span><div style="margin-left:14px"><div class="vtxt" style="font-family:var(--font)">Scanning '+patterns.length+' regex'+(patterns.length>1?'es':'')+' for catastrophic backtracking…</div><div class="vsub">each candidate is run against growing attack inputs in an isolated worker</div></div></div>';
+
+    var findings = [];
+    for(var i=0;i<patterns.length;i++){
+      var p = patterns[i];
+      var valid = true;
+      try { new RegExp(p.source, p.flags); } catch(e){ valid = false; }
+      var res = valid ? await checkOne(p.source, p.flags) : {status:'invalid'};
+      findings.push({pat:p, res:res});
+      // yield so the UI stays responsive
+      await new Promise(function(r){setTimeout(r,0);});
+    }
+    renderScan(findings, lang);
+    busy=false; goCodeEl.disabled=false;
+  }
+
+  function renderScan(findings, lang){
+    var vulns = findings.filter(function(f){ return f.res.status==='vuln'; });
+    var total = findings.length;
+    var hdrCls = vulns.length ? 'big' : 'big';
+    var summary = vulns.length
+      ? '<span style="color:var(--danger)">\uD83D\uDCA5 '+vulns.length+' of '+total+' regex'+(total>1?'es':'')+' can be hung</span>'
+      : '<span style="color:var(--safe)">\u2705 all '+total+' regex'+(total>1?'es':'')+' held up</span>';
+    var html = '<div class="scanhdr"><div class="big">'+summary+'</div>'+
+      '<div class="sub">Each vulnerable pattern below comes with a proven, measured hang \u2014 tested live in your browser.</div></div>';
+    // vulnerable first, then safe
+    var ordered = vulns.concat(findings.filter(function(f){ return f.res.status!=='vuln'; }));
+    ordered.forEach(function(f){
+      var p = f.pat, r = f.res;
+      var loc = 'line'+(p.locs.length>1?'s':'')+' '+p.locs.join(', ');
+      if(r.status==='vuln'){
+        var cls = CLASS_BY_KIND[r.kind]||'exponential';
+        var badge = cls==='exponential'? '<span class="badge exp">EXPONENTIAL</span>' : '<span class="badge poly">POLYNOMIAL</span>';
+        var pr = r.proof;
+        html += '<div class="finding"><div class="fhd"><code class="pat">/'+esc(p.source)+'/'+esc(p.flags)+'</code>'+badge+'<span class="loc">'+esc(loc)+'</span></div>'+
+          '<div class="fproof">\uD83D\uDCA3 a '+pr.length+'-char input hangs it &gt;'+pr.timeoutMs+'ms &nbsp; \u2014 &nbsp; <span class="pre">'+esc(pr.prefix)+'</span><span class="pump">('+esc(pr.pump)+' \u00d7 '+pr.pumps+')</span><span class="suf">'+esc(pr.suffix)+'</span></div></div>';
+      } else if(r.status==='invalid'){
+        html += '<div class="finding"><div class="fhd"><code class="pat">/'+esc(p.source)+'/'+esc(p.flags)+'</code><span class="badge safe">skipped</span><span class="loc">'+esc(loc)+'</span></div>'+
+          '<div class="fproof">Not a valid JS regex \u2014 not evaluated.</div></div>';
+      } else {
+        html += '<div class="finding"><div class="fhd"><code class="pat">/'+esc(p.source)+'/'+esc(p.flags)+'</code><span class="badge safe">safe</span><span class="loc">'+esc(loc)+'</span></div></div>';
+      }
+    });
+    resultEl.innerHTML = html;
+  }
+
+  // ---- mode switching ----
+  var modeRegexBtn = document.getElementById('modeRegex');
+  var modeCodeBtn = document.getElementById('modeCode');
+  var panelRegex = document.getElementById('panelRegex');
+  var panelCode = document.getElementById('panelCode');
+  function setMode(m){
+    var isCode = m==='code';
+    modeCodeBtn.classList.toggle('active', isCode);
+    modeRegexBtn.classList.toggle('active', !isCode);
+    panelCode.style.display = isCode ? '' : 'none';
+    panelRegex.style.display = isCode ? 'none' : '';
+    resultEl.className = 'result'; resultEl.innerHTML='';
+    if(isCode) runCode(); else run();
+  }
+  modeRegexBtn.onclick = function(){ setMode('regex'); };
+  modeCodeBtn.onclick = function(){ setMode('code'); };
+  goCodeEl.onclick = runCode;
 
   goEl.onclick = run;
   reEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){ run(); }});

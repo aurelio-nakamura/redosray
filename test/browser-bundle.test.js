@@ -38,3 +38,21 @@ test('browser bundle findCandidates matches the Node engine', () => {
     assert.strictEqual(b, n, `mismatch for /${src}/: browser=${b} node=${n}`);
   }
 });
+
+test('bundle exposes extractFromText for the code-scan playground', () => {
+  const browser = loadBundle();
+  assert.strictEqual(typeof browser.extractFromText, 'function');
+  const found = browser.extractFromText('const re=/^(a+)+$/; const g=/\\d+/g;', 'snippet.ts');
+  assert.strictEqual(found.length, 2);
+  assert.strictEqual(found[0].source, '^(a+)+$');
+});
+
+test('playground worker is actually fed input (no idle-timeout false positives)', () => {
+  // Regression guard: timeMatch MUST post the pattern+input to the worker, or the
+  // worker idles and every candidate spuriously "times out" (false positives).
+  const html = fs.readFileSync(path.join(ROOT, 'docs', 'index.html'), 'utf8');
+  assert.ok(
+    /w\.postMessage\(\s*\{\s*source\s*:/.test(html),
+    'docs/index.html timeMatch must call w.postMessage({source,flags,input})'
+  );
+});
