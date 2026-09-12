@@ -190,6 +190,12 @@ and watch your own regex hang.
 - Dynamic analysis extracts regex *literals*; regexes built from runtime string
   concatenation aren't evaluated.
 - Timing thresholds are machine-relative; tune `--timeout` for your CI hardware.
+- **A confirmed hang means the *regex* is vulnerable — not automatically that your
+  *app* is exploitable.** redosray proves the pattern backtracks catastrophically
+  on a crafted string; whether an attacker can actually route that string to the
+  pattern depends on your code (length caps, upstream validation, or a stricter
+  tokenizer can make a scary-looking regex unreachable in practice). Treat every
+  finding as "fix this regex," and check reachability before rating severity.
 
 ## Comparison
 
