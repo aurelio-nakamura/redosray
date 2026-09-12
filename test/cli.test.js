@@ -79,3 +79,16 @@ test('unknown option exits 2', () => {
   const r = run(['--bogus']);
   assert.strictEqual(r.code, 2);
 });
+
+test('conversion footer never appears in piped/non-TTY output', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'redosray-cli-'));
+  fs.writeFileSync(path.join(dir, 'a.js'), 'const re = /^(a+)+$/;\n');
+  const full = execFileSync('node', [BIN, dir], {
+    encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ok(!/star helps|playground/i.test(full), 'footer must not pollute piped stdout');
+  const j = run([dir, '--json']);
+  assert.ok(!/star helps/i.test(j.stdout), 'footer must not appear in --json');
+  fs.rmSync(dir, { recursive: true, force: true });
+});

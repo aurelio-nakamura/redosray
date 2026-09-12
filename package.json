@@ -1,6 +1,6 @@
 {
   "name": "redosray",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Find ReDoS-vulnerable regexes in your code and prove them — offline. Shows the exact input that hangs each pattern.",
   "type": "commonjs",
   "repository": {
@@ -31,5 +31,14 @@
     "node": ">=16"
   },
   "license": "MIT",
-  "keywords": ["redos", "regex", "security", "backtracking", "dos", "regexp", "sast", "static-analysis"]
+  "keywords": [
+    "redos",
+    "regex",
+    "security",
+    "backtracking",
+    "dos",
+    "regexp",
+    "sast",
+    "static-analysis"
+  ]
 }

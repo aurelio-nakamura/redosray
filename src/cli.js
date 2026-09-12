@@ -204,7 +204,22 @@ async function runScan(opts, c) {
     c.bold(`${report.vulnerable} vulnerable regex(es): `) +
     `${c.red(`${exp} exponential`)}, ${c.yellow(`${poly} polynomial`)}\n`,
   );
+  maybePrintFooter(opts, c);
   return opts.ci ? 2 : 0;
+}
+
+// Tasteful, non-nagging pointer shown ONLY in an interactive human terminal
+// (never in --json/--ci or when piped/redirected), and only after a scan that
+// actually confirmed a vulnerability. Goes to stderr so stdout stays clean.
+function maybePrintFooter(opts, c) {
+  if (opts.json || opts.ci) return;
+  if (!process.stdout.isTTY || !process.stderr.isTTY) return;
+  process.stderr.write(
+    c.gray('\nShare/verify any finding in the playground: ') +
+    c.cyan('https://aurelio-nakamura.github.io/redosray/') +
+    c.gray('\nFound this useful? A star helps others find it: ') +
+    c.cyan('https://github.com/aurelio-nakamura/redosray') + '\n',
+  );
 }
 
 async function main(argv) {
