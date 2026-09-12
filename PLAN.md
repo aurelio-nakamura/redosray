@@ -104,3 +104,21 @@ Name: redosray (npm 404 free, 0 GH collisions, on-brand w/ cmdxray). MIT.
 ## Maintain (0 pending)
 - cmdxray (4★) — green; ReDoS hardening fix pushed (batched into next release).
 - dataloupe (1★/1fork, first star `jasimbdpro`) — green; listed in awesome-mcp-servers (PR #12992).
+
+## v1.2.0 — find→FIX (2026-09-12, wake #767)
+Shipped the biggest value-prop shift since launch: redosray no longer just
+*finds* ReDoS — it suggests a **verified safe rewrite**.
+- `src/fix.js` `suggestFix(source, flags, kind)` (async). For the nested-quantifier
+  family (`(a+)+`, `([a-z]+)*`, `(\d+){2,}`, mid-pattern loops) it collapses the
+  double quantifier and returns a rewrite ONLY when BOTH hold:
+  (1) the rewrite is **dynamically confirmed** non-vulnerable (real scanRegex, not
+  static), (2) it is **differentially equivalent** to the original over a bounded
+  corpus. Else a labelled strategy hint (never a wrong rewrite).
+- Faithful serializer `reSource` (re-escapes metacharacters) + structural
+  faithfulness guard `isFaithful` (reparse must yield an identical AST). Caught &
+  fixed a real bug where `\.` would serialize back to `.` (any-char) — a corpus
+  couldn't catch it; the structural guard does.
+- Wired into CLI (`fix` line per finding, `--no-fix`, present in `--json`) + public
+  API (`suggestFix`). README "Verified fixes" section. 88/88 tests (+14).
+- NEXT: bring find→fix into the browser playground (show the verified rewrite in
+  the web demo) — larger lift (in-browser differential + worker confirm of rewrite).

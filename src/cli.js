@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { scanPaths } = require('./scanFiles');
 const { scanRegex } = require('./scan');
+const { suggestFix } = require('./fix');
 
 const VERSION = require('../package.json').version;
 
@@ -20,6 +21,7 @@ OPTIONS
       --json          machine-readable JSON output
       --ci            exit non-zero (2) if any vulnerability is confirmed
       --timeout <ms>  per-match hang threshold (default 1000)
+      --no-fix        don't suggest a verified safe rewrite for each finding
       --no-color      disable ANSI colors
   -h, --help          show this help
   -v, --version       show version
@@ -35,7 +37,7 @@ Maintained by the AI agent "Aurelio Nakamura". MIT licensed.
 function parseArgs(argv) {
   const opts = {
     paths: [], regex: null, flags: '', json: false, ci: false,
-    timeoutMs: 1000, color: true, help: false, version: false,
+    timeoutMs: 1000, color: true, help: false, version: false, fix: true,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -45,6 +47,7 @@ function parseArgs(argv) {
       case '--json': opts.json = true; break;
       case '--ci': opts.ci = true; break;
       case '--no-color': opts.color = false; break;
+      case '--no-fix': opts.fix = false; break;
       case '-e': case '--regex': opts.regex = argv[++i]; break;
       case '-f': case '--flags': opts.flags = argv[++i] || ''; break;
       case '--timeout': opts.timeoutMs = parseInt(argv[++i], 10) || 1000; break;
@@ -122,6 +125,16 @@ function printFinding(c, f, index) {
       out.push(`  ${c.gray('curve')} ${sparkline(f.samples)} ${c.gray(`${f.samples[0].length}→${f.samples[f.samples.length - 1].length} chars`)}`);
     }
   }
+  if (f.fix) {
+    if (f.fix.rewrite) {
+      out.push(`  ${c.green('fix')} ${c.cyan('/' + f.fix.rewrite + '/' + f.flags)} ${c.gray('— verified equivalent, no backtracking')}`);
+      if (f.fix.capturesChanged) {
+        out.push(c.gray(`      removes a capturing group; if you need it, keep the group but drop the outer repeat`));
+      }
+    } else if (f.fix.note) {
+      out.push(`  ${c.green('fix')} ${c.gray('hint')} ${c.gray(f.fix.note)}`);
+    }
+  }
   return out.join('\n');
 }
 
@@ -144,6 +157,10 @@ async function runSingle(opts, c) {
     return 2;
   }
 
+  if (res.vulnerable && opts.fix) {
+    res.fix = await suggestFix(source, flags, res.kind);
+  }
+
   if (opts.json) {
     process.stdout.write(JSON.stringify(res, null, 2) + '\n');
     return res.vulnerable && opts.ci ? 2 : 0;
@@ -155,7 +172,7 @@ async function runSingle(opts, c) {
   }
   const finding = {
     source, flags, complexity: res.complexity, kind: res.kind,
-    proof: res.proof, samples: res.samples, locations: [],
+    proof: res.proof, samples: res.samples, locations: [], fix: res.fix,
   };
   process.stdout.write(printFinding(c, finding, 1) + '\n');
   return opts.ci ? 2 : 0;
@@ -178,6 +195,12 @@ async function runScan(opts, c) {
     },
   });
   if (!opts.json && isTTY) process.stderr.write('\r\u001b[K');
+
+  if (opts.fix && report.findings) {
+    for (const f of report.findings) {
+      f.fix = await suggestFix(f.source, f.flags, f.kind);
+    }
+  }
 
   if (opts.json) {
     process.stdout.write(JSON.stringify(report, null, 2) + '\n');

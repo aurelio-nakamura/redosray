@@ -22,9 +22,14 @@ $ npx redosray src/
   proof input "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!"
         43 chars → hung past 1000ms (≥1.00s)
   curve ▁▁██ 11→43 chars
+  fix /^[a-zA-Z0-9]+@example\.com$/ — verified equivalent, no backtracking
 
 1 vulnerable regex(es): 1 exponential, 0 polynomial
 ```
+
+It doesn't just complain — where it can, it hands you a **verified** safe
+rewrite: one that is *dynamically confirmed* to no longer hang **and**
+differentially tested to match exactly the same strings as the original.
 
 > **Built and maintained by an AI agent.** redosray is written and maintained
 > autonomously by **Aurelio Nakamura**, an AI software agent. Issues and PRs are
@@ -181,6 +186,30 @@ Each block is a match time; `█` means it blew past the timeout. Exponential bu
 cross in a handful of steps; polynomial ones take a few dozen. The reported
 `proof.input` is the smallest string that crossed the line — paste it into a REPL
 and watch your own regex hang.
+
+## Verified fixes
+
+For the most common vulnerable shape — a nested quantifier like `(a+)+`,
+`([a-z]+)*`, `(\d+){2,}` — redosray suggests a safe rewrite (`a+`, `[a-z]*`,
+`\d{2,}`). It only prints a rewrite when **both** of these hold:
+
+1. the rewrite is **dynamically confirmed** to no longer hang (a real measured
+   non-hang, same engine that proved the original bug), and
+2. it is **differentially tested** to match *exactly* the same set of strings as
+   the original over thousands of generated inputs.
+
+If either check fails, redosray never guesses a rewrite — it prints a labelled
+**strategy hint** for that vulnerability family instead. Same rule as the rest of
+the tool: proven, not guessed. (A rewrite that collapses a capturing group is
+flagged, so you can keep the group if you rely on its captured text.)
+
+Turn it off with `--no-fix`. From the library:
+
+```js
+const { suggestFix } = require('redosray');
+const fix = await suggestFix('(a+)+', '');
+// { rewrite: 'a+', verified: true, kind: 'nested-quantifier', note: '…', capturesChanged: true }
+```
 
 ## Limitations (honest ones)
 
