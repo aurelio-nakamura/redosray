@@ -135,7 +135,19 @@
   footer{border-top:1px solid var(--border);margin-top:48px;padding:26px 20px 60px;text-align:center;color:var(--muted);font-size:.88rem}
   .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--danger);
     border-radius:50%;animation:sp .7s linear infinite}
+  .spin.sm{width:12px;height:12px;vertical-align:-1px;margin-right:6px}
   @keyframes sp{to{transform:rotate(360deg)}}
+  .fixbody{font-size:.92rem}
+  .fixok{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fixtag{color:#2ea043;font-weight:600;font-size:.82rem}
+  .fixre{background:#010409;border:1px solid var(--border);border-radius:8px;padding:4px 9px;
+    font-family:var(--font);font-size:.9rem;color:#2ea043;word-break:break-all}
+  .fixproof{color:var(--fg);margin:7px 0 0;font-size:.88rem}
+  .fixproof b{color:#2ea043}
+  .fixnote{color:var(--muted);margin:7px 0 0;font-size:.86rem;line-height:1.45}
+  button.mini{font-family:var(--font);font-size:.78rem;background:var(--panel2);color:var(--fg);
+    border:1px solid var(--border);border-radius:6px;padding:3px 9px;cursor:pointer}
+  button.mini:hover{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -355,6 +367,7 @@ redosray ./src --json</pre>
           '<div class="proof">'+proofHtml+'</div></div>'+
         '<div class="row"><div class="k">Measured blow-up</div>'+ sparkline(res.samples) +'</div>'+
         '<div class="row"><div class="k">Vulnerability shape</div><code>'+esc(res.matchedShape||source)+'</code> — '+esc(res.kind)+'</div>'+
+        '<div class="row" id="fixrow"><div class="k">Suggested fix</div><div class="fixbody"><span class="spin sm"></span> checking for a verified safe rewrite…</div></div>'+
       '</div>'+
       '<div class="actions">'+
         '<button id="copyres">Copy result</button>'+
@@ -362,6 +375,45 @@ redosray ./src --json</pre>
       '</div>';
     document.getElementById('copyres').onclick = function(){ copy(shareText, this); };
     document.getElementById('copylink').onclick = function(){ copy(location.origin+location.pathname+'#'+encodeURIComponent('/'+source+'/'+flags), this); };
+    renderFix(source, flags, res);
+  }
+
+  // Generate + DYNAMICALLY confirm a safe rewrite, right in the playground.
+  // A rewrite is only shown as "verified" when (1) redosray proved it matches the
+  // exact same strings as the original (differential equivalence) AND (2) the same
+  // killer input that hung the original is MEASURED here to return fast. Otherwise
+  // we show an honest, labelled strategy note — never a false "fixed" claim.
+  async function renderFix(source, flags, res){
+    var el = document.getElementById('fixrow'); if(!el) return;
+    var body = el.querySelector('.fixbody');
+    var cand = null;
+    try { cand = window.redosray.candidateFix(source, flags); } catch(e){ cand = null; }
+
+    if(cand && cand.rewrite){
+      var p = res.proof;
+      var killer = (p.prefix||'') + p.pump.repeat(p.pumps) + (p.suffix||'');
+      var r = await timeMatch(cand.rewrite, flags, killer, 750);
+      var staticOk = true;
+      try { staticOk = window.redosray.staticallyClean(cand.rewrite, flags); } catch(e){ staticOk = false; }
+      if(!r.error && !r.timedOut && staticOk){
+        var shareFix = 'redosray verified fix: /'+source+'/ → /'+cand.rewrite+'/ — same '+p.length+
+          '-char input that hung the original returns in '+human(r.ms)+'. https://aurelio-nakamura.github.io/redosray/';
+        body.innerHTML =
+          '<div class="fixok"><span class="fixtag">✅ verified safe rewrite</span> '+
+            '<code class="fixre">/'+esc(cand.rewrite)+'/'+esc(flags)+'</code> '+
+            '<button class="mini" id="copyfix">copy</button></div>'+
+          '<div class="fixproof">The exact '+p.length+'-char input that hangs the original returns in '+
+            '<b>'+human(r.ms)+'</b> here — and redosray proved this rewrite matches the same strings.</div>'+
+          (cand.capturesChanged? '<div class="fixnote">'+esc(cand.note)+'</div>' : '');
+        var cf = document.getElementById('copyfix');
+        if(cf) cf.onclick = function(){ copy(shareFix, this); };
+        return;
+      }
+    }
+    // No verified rewrite → honest strategy note keyed by family.
+    var notes = window.redosray.STRATEGY_NOTES || {};
+    var note = notes[res.kind] || notes['nested-quantifier'] || 'Reduce ambiguity so the engine has only one way to consume each character.';
+    body.innerHTML = '<div class="fixnote"><b>Strategy:</b> '+esc(note)+'</div>';
   }
 
   function renderSafe(source, flags, res){

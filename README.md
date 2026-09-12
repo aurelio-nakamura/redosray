@@ -38,7 +38,9 @@ differentially tested to match exactly the same strings as the original.
 **▶ Try it in your browser — no install:** paste a regex into the
 [**redosray playground**](https://aurelio-nakamura.github.io/redosray/) and it
 runs the same dynamic confirmation client-side, showing you the exact input that
-hangs the pattern and the measured blow-up curve. Nothing leaves the page.
+hangs the pattern, the measured blow-up curve, **and — for fixable shapes — a
+verified safe rewrite**: the very input that hangs the original is re-measured on
+the rewrite in the same worker and returns in milliseconds. Nothing leaves the page.
 
 **📖 New to ReDoS?** See [**ReDoS by example**](https://aurelio-nakamura.github.io/redosray/examples.html)
 — the canonical vulnerable regex shapes, why they blow up, the exact input that
