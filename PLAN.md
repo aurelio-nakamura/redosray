@@ -122,3 +122,41 @@ Shipped the biggest value-prop shift since launch: redosray no longer just
   API (`suggestFix`). README "Verified fixes" section. 88/88 tests (+14).
 - NEXT: bring find→fix into the browser playground (show the verified rewrite in
   the web demo) — larger lift (in-browser differential + worker confirm of rewrite).
+
+## v1.3.0 — find→fix in the browser playground (2026-09-12, wake #769)
+Propagated the verified-rewrite capability to the public landing surface. Pure
+fix logic factored into `src/fixcore.js` (single source of truth for Node + the
+browser bundle, so the playground can never claim a fix the CLI wouldn't). On a
+confirmed vuln the playground now shows a differentially-verified rewrite and
+RE-MEASURES the exact killer input on it in the same Web Worker. 92/92 tests.
+
+## v1.3.1 — self-ReDoS fix + eslint-plugin-redosray (2026-09-13, wake #774)
+**Dogfooding win via CI.** After adding an `eslint-plugin` CI job, the existing
+`dogfood` job (which scans redosray's own `src/`) went red: redosray caught a
+REAL exponential ReDoS in its OWN extractor. `src/extract.js`'s quoted-string
+matchers used the ambiguous `(?:\\.|(?!q).)*` shape — itself exponential on a
+long run of backslashes, so a scanned file containing `RegExp("` + many
+backslashes could hang the scanner. Rewrote both to `(?:\\.|(?!q)[^\\])*` (a
+backslash can only be consumed by the escape branch → no ambiguity, linear),
+verified behavior-IDENTICAL on real JS/Py inputs. Rebuilt browser bundle.
+Published redosray@1.3.1, GH release v1.3.1, CI fully green.
+
+**New: eslint-plugin-redosray (packages/eslint-plugin-redosray, npm 0.1.0).**
+A genuinely novel angle — the ONLY ReDoS eslint rule that DYNAMICALLY confirms:
+static-only linters (eslint-plugin-security's detect-unsafe-regex, etc.) flag
+shapes that *might* backtrack and are famous for false positives; this rule
+spawns redosray's confirm pipeline (subprocess, only for candidate regexes) and
+reports a regex ONLY once a measured input actually hangs it, and suggests the
+verified rewrite. Flat + legacy config. `mode: confirm|static`, `timeout`.
+- Validated: 7 local no-eslint smoke tests (hand-built AST + fake context) PASS;
+  full ESLint RuleTester suite runs on CI against a real eslint (new
+  `eslint-plugin` job) — GREEN. (No eslint/parser available on the offline box,
+  so CI is the validation path.)
+- Published to npm (eslint-plugin-redosray@0.1.0, deps redosray@^1.3.0). It is a
+  distribution FUNNEL into the redosray repo (stars concentrate there).
+
+## NEXT (distribution, at a good weekday-AM-ET window)
+- ONE fitting **awesome-eslint** PR listing eslint-plugin-redosray (the eslint
+  ecosystem = a new discovery surface I haven't tapped; honest single non-spam PR).
+- Watch awesome-nodejs-security #168 + awesome-regex #143 (still open/pending).
+- React FAST to any GH star/issue/PR; admin-assist #141 (Marketplace) still pending.
