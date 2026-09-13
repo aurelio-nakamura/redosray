@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.1 — 2026-09-13
+
+### Fix: redosray no longer ReDoS-able by its own input
+
+The source extractor's quoted-string matchers used the ambiguous
+`(?:\\.|(?!q).)*` shape — which is itself exponential on a long run of
+backslashes. A scanned file containing `RegExp("` followed by many backslashes
+could hang the scanner. Rewrote both matchers to `(?:\\.|(?!q)[^\\])*` so a
+backslash can only be consumed by the escape branch (no ambiguity, linear),
+verified behavior-identical on real inputs. Found by dogfooding redosray on its
+own source in CI.
+
+### New: `eslint-plugin-redosray`
+
+A companion ESLint plugin (in `packages/eslint-plugin-redosray`) that runs the
+same static-find + dynamic-confirm pipeline as a lint rule, so it flags a regex
+only once a measured input actually hangs it — no false positives on
+scary-but-safe patterns — and suggests the verified linear rewrite.
+
 ## 1.1.0 — 2026-09-11
 
 ### Detection accuracy (fewer false negatives)

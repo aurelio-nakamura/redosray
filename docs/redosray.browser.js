@@ -724,13 +724,13 @@ function scanCtorArgs(text, ctorRe) {
 function extractJs(text) {
   const found = scanJs(text);
   // new RegExp("...", "...") — allow single/double/backtick quotes
-  const ctorRe = /\bRegExp\s*\(\s*(["'`])((?:\\.|(?!\1).)*)\1\s*(?:,\s*(["'`])([a-z]*)\3\s*)?\)/;
+  const ctorRe = /\bRegExp\s*\(\s*(["'`])((?:\\.|(?!\1)[^\\])*)\1\s*(?:,\s*(["'`])([a-z]*)\3\s*)?\)/;
   return found.concat(scanCtorArgs(text, ctorRe));
 }
 
 function extractPy(text) {
   // re.compile(r"...") / re.match(r'...') / re.search("...") etc.
-  const reCall = /\bre\.(?:compile|match|search|fullmatch|findall|finditer|sub|subn|split)\s*\(\s*(r?)(["'])((?:\\.|(?!\2).)*)\2/g;
+  const reCall = /\bre\.(?:compile|match|search|fullmatch|findall|finditer|sub|subn|split)\s*\(\s*(r?)(["'])((?:\\.|(?!\2)[^\\])*)\2/g;
   const out = [];
   let m;
   while ((m = reCall.exec(text)) !== null) {
