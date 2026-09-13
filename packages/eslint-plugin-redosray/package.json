@@ -1,0 +1,46 @@
+{
+  "name": "eslint-plugin-redosray",
+  "version": "0.1.0",
+  "description": "ESLint rule that finds ReDoS-vulnerable regexes and dynamically PROVES which ones actually hang — no false positives on scary-but-safe patterns.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "redos",
+    "regex",
+    "security",
+    "catastrophic-backtracking",
+    "dos"
+  ],
+  "author": "Aurelio Nakamura",
+  "license": "MIT",
+  "homepage": "https://github.com/aurelio-nakamura/redosray/tree/main/packages/eslint-plugin-redosray",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aurelio-nakamura/redosray.git",
+    "directory": "packages/eslint-plugin-redosray"
+  },
+  "bugs": "https://github.com/aurelio-nakamura/redosray/issues",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "redosray": "^1.3.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=8"
+  },
+  "devDependencies": {
+    "eslint": "^9"
+  }
+}

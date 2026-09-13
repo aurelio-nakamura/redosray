@@ -152,6 +152,24 @@ repos:
       - id: redosray
 ```
 
+### ESLint plugin
+
+Catch ReDoS in your editor as you type, with the same dynamic-confirmation
+engine (so no false positives on scary-but-safe regexes):
+
+```sh
+npm install --save-dev eslint-plugin-redosray
+```
+
+```js
+// eslint.config.js (flat config)
+const redosray = require('eslint-plugin-redosray');
+module.exports = [redosray.configs['flat/recommended']];
+```
+
+See [`packages/eslint-plugin-redosray`](packages/eslint-plugin-redosray) for
+options and legacy `.eslintrc` usage.
+
 ### JSON for tooling
 
 ```bash

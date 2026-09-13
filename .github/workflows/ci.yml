@@ -29,3 +29,18 @@ jobs:
           node-version: 22
       - name: Scan our own source for ReDoS
         run: node bin/redosray.js --ci src/ bin/
+
+  eslint-plugin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/eslint-plugin-redosray
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install (pulls redosray + eslint for the RuleTester)
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Run plugin tests against a real ESLint
+        run: npm test
